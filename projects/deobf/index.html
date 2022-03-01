@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	
+	<head>
+		<meta charset="utf-8"/>
+		<title>Rules & Intro</title>
+		<link href="css/main.css" rel="stylesheet" type="text/css">
+		<link rel="icon" href="images/player.png">
+		
+		<style>
+			/*media*/
+			@media screen and (max-width: 900px){
+				
+				/*mobile*/
+				
+				#maingrid{
+					display: grid;
+					grid-template-columns: 1fr;
+				}
+				
+				.sec1 figure {
+					 width: 50%;
+				}
+			}
+
+			@media screen and (min-width: 901px) and (max-width: 1274px){
+				#maingrid{
+					display: grid;
+					grid-template-columns: 1fr 2fr;
+				}
+				.sec1{
+					grid-column: 1/3;
+				}
+				
+				.sec1 figure {
+					 width: 40%;
+				}
+				
+				.sec2{
+					grid-column: 1/2;
+					background-color: #294380;
+				}
+				
+				.sec3{
+					grid-column: 2/3;
+				}
+				.sec4{
+					grid-column: 1/3;
+				}
+			}
+
+			@media screen and (min-width: 1275px){
+				
+				/* DESKTOP */
+				
+				#maingrid{
+					display: grid;
+					grid-template-columns: 1fr 3fr;
+				}
+				.sec1{
+					grid-column: 1/3;
+				}
+				
+				.sec1 figure {
+					 width: 75%;
+				}
+				
+				.sec1 {
+					font-size: 1.2em;
+				}
+				
+				.sec2{
+					grid-column: 1/2;
+					background-color: #294380;
+				}
+				
+				.sec3{
+					grid-column: 2/3;
+				}
+				.sec4{
+					grid-column: 1/3;
+				}
+			}
+			
+			@media print{
+				.sec4 {
+					display: none;
+				}
+				nav {
+					display: none;
+				}
+			}
+			
+			.sec1 {
+				line-height: 1.5;
+			}
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<div id="maingrid">
+			
+			<nav>
+				<a href="index.html">Intro</a>
+				<a href="page2.html">Reflection Qs</a>
+				<a href="page3.html">Game Page</a>
+			</nav>
+			
+			<div id="back"></div>
+		
+			<header>
+				<h1>De-Obfuscate</h1>
+				<h4>How to play & Game Info</h4>
+			</header>
+			
+			<section class ="sec1">
+				<figure style="float:right;">
+					<img src="images/lvl2.png" alt="A circut board background with circut boards and translucent blue blocks on the foreground"/>
+					<figcaption>The second level of De-Obfuscate.</figcaption>
+				</figure>
+				<h2>The Story</h2>
+				<p>In De-Obfuscate you play as windows defender anti-virus. The computer you're protecting has been attacked by a virus which has obfuscated the user's data. It is your job to figure out what order the data is meant to be in, then re-order it as fast as you can. The faster you fix everything the more stars you get, but be careful, there are traps left behind by the virus to stop you from fixing things.</p>
+			</section>
+			
+			<section class="sec2">
+				<h2>Controls</h2>
+				<h3>Keyboard</h3>
+				<p><b>Quick Restart - </b> R</p>
+				<p><b>Jump - </b> Space Bar / W</p>
+				<p><b>Move Right - </b> D </p>
+				<p><b>Move Left - </b> A </p>
+				<p><b>Go Back - </b> Esc </p>
+				<h3>Mouse</h3>
+				<p><b>Use Buttons - </b> Left Click </p>
+				<br>
+				<h2>Objective</h2>
+				<p>On each stage your objective is to figure out what order the circuts go in, then collect all the circuts in that order as fast as you can.</p>
+			</section>
+
+			<section class="sec3">
+				<h2>Glossary of Items</h2>
+				
+				<table>
+					<tr>
+						<th class="headerBox">Image</th>
+						<th class="headerBox">Description</th>
+					</tr>
+					<tr>
+						<td class="sideBox"><img src="images/player.png" alt="A gray shield with red, gree, blue, and yellow on it split into quadrants."/></td>
+						<td>This is the character that you control, it responds to your key inputs and is used to pick up the collectables.</td>
+					</tr>
+					<tr>
+						<td class="sideBox"><img src="images/block.PNG" alt="A blue translucent block on a circut board background"/></td>
+						<td>This is a basic block, you can stand on it and jump off of it. If you run into it, your momentum will be stopped.</td>
+					</tr>
+					<tr>
+						<td class="sideBox"><img src="images/spike1.png" alt="A green scalene triangle facing upwards."/></td>
+						<td>This is a spike, if you come into contact with it you will be killed. Or maybe you'll get free money, but probably just death.</td>
+					</tr>
+					<tr>
+						<td class="sideBox"><img src="images\collectables\level1/box1.png" alt="A circut board icon with the number one on it."/></td>
+						<td>This is a collectable, you must grab these in a certian order to completer each level. The circuts are ordered by different attributes each level.</td>
+					</tr>
+				</table>	
+			</section>
+			
+			<section class="sec4">
+				<h2>Hints</h2>
+				<p>Hover over a hint to read it.</p>
+				
+				<h3>General</h3>
+				<p class="hint">Go faster to get more stars</p><br>
+				<p class="hint">If the game appears broken try refreshing the page, it will likely fix the error</p><br>
+				<p class="hint">All hitboxes are square</p><br>
+				<p class="hint">A player character is slightly over 1 block tall, and 1 block wide</p><br>
+				
+				<h3>Level 1</h3>
+				<p class="hint">Collect the circuts in ascending order by number</p><br>
+				
+				<h3>Level 2</h3>
+				<p class="hint">Collect the circuts in order from most transparent to least transparent</p><br>
+				<p class="hint">Order: bottom, left, top, right</p><br>
+				
+				<h3>Level 3</h3>
+				<p class="hint">The circuts are ordered from largest to smallest</p><br>
+				<p class="hint">Watch out for hazards that are on one side of the screen but not the other</p><br>
+				
+				<h3>Level 4</h3>
+				<p class="hint">The circuts spell out a word</p><br>
+				<p class="hint">The order is C -> O -> D -> E</p><br>
+				<p class="hint">Note the cubbies where you can get one player character stuck, while the other remains free</p><br>
+				
+				<h3>Level 5</h3>
+				<p class="hint">Collect the circuts by colour, in the order of the rainbow</p><br>
+				<p class="hint">The order is Red -> Orange -> Yellow -> Green -> Blue -> Purple</p><br>
+				<p class="hint">You can jump and stop the movement of one, while the other continues moving</p><br>
+				
+				<h3>Level 6</h3>
+				<p class="hint">Collect the circuts in order of number of verticies</p><br>
+				<p class="hint">There is no shame in not completing this level</p><br>
+				<p class="hint">It can be easiest to work out an order of events that makes some progress, then experiment to try to find more steps</p><br>
+				<p class="hint">Its possible I swear</p><br>
+			</section>
+			
+			<footer>
+				<p>De-Obfuscate Offical Page</p>
+				<p>Nathan Harrison<br />Copyright &copy;2021</p>
+			</footer>
+			
+		</div>
+	</body>
+	
+</html>

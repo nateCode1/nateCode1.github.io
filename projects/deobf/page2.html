@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	
+	<head>
+		<meta charset="utf-8"/>
+		<title>Reflection</title>
+		<link href="css/main.css" rel="stylesheet" type="text/css">
+		<link rel="icon" href="images/player.png">
+		
+		<style>
+			/*media*/
+			@media screen and (max-width: 900px){
+				
+				/*mobile*/
+				
+				#maingrid{
+					display: grid;
+					grid-template-columns: 1fr;
+				}
+				
+				.sec2 figure {
+					width: 100%
+				}
+				
+				p {
+					line-height: 1.5;
+				}
+				
+				#break { /*breaks up the text visually, which can look like a lot on mobile*/
+					background-color: rgba(0,0,100,0.5);
+					padding: 3px;
+					border-radius: 3px;
+				}
+			}
+
+			@media screen and (min-width: 901px) and (max-width: 1274px){
+				#maingrid{
+					display: grid;
+					grid-template-columns: 1fr 2fr;
+				}
+				.sec1{
+					grid-column: 1/2;
+				}
+				
+				.sec2{
+					grid-column: 2/3;
+				}
+				
+				section {
+					padding: 16px;
+				}
+				
+				p {
+					line-height: 1.5;
+				}
+				
+				.sec2 figure {
+					width: 100%
+				}
+			}
+
+			@media screen and (min-width: 1275px){
+				
+				/* DESKTOP */
+				
+				#maingrid{
+					display: grid;
+					grid-template-columns: 4fr 7fr;
+				}
+				.sec1{
+					grid-column: 1/2;
+				}
+				
+				.sec2{
+					grid-column: 2/3;
+				}
+				
+				p {
+					line-height: 1.3;
+				}
+				
+				.sec2 figure {
+					width: 50%
+				}
+			}
+			
+			@media print{
+				.sec4 {
+					display: none;
+				}
+				nav {
+					display: none;
+				}
+			}
+		</style>
+		
+	</head>
+	
+	<body>
+		
+		<div id="maingrid">
+			
+			<nav>
+				<a href="index.html">Intro</a>
+				<a href="page2.html">Reflection Qs</a>
+				<a href="page3.html">Game Page</a>
+			</nav>
+			
+			<div id="back"></div>
+		
+			<header>
+				<h1>Reflection Questions</h1>
+				<h4>My Career Path & Reflection Questions</h4>
+			</header>
+			
+			<section class ="sec1">
+				<h2>Career Path</h2>
+				<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;My current career plan is to continue pursuing computer science. I would like to get a bachelor's degree in computer science at Queen’s University or Wilfrid Laurier University. After earning my degree, I would like to begin work in a related field. Ideally, I would like to be a full-stack developer or a software engineer. I’ve had an interest in coding and computer science for years now, and have spent a lot of time learning about and practicing my coding abilities.</p>
+				<figure style="float: right; width: 100%;">
+					<img src="images/tradeshow.png" alt="A group of nerds standing in a library with the mayor of Aurora, some hold a certificate." />
+					<figcaption>A talk I gave at a tradeshow in San Francisco remotely from my basement.</figcaption>
+				</figure>
+				<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Being able to convert this interest and acquired skill into a career is something that I’ve wanted for a long time. Additionally, most jobs in this field tend to be rather high paying which is obviously another positive aspect of this career path. This career path also offers a wide variety of opportunities, and most positions have lots of chances for advancement. Overall, I’d say I want to go into a career in computer science because it will take an interest of mine and allow me to turn it into a career in a growing field.</p>
+			</section>
+			
+			<section class="sec2">
+				<h2>Reflection Questions</h2>
+				<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In a career path such as computer science, there are a lot of very obvious cases in which knowledge from this class will come in handy, as the concepts learned are very directly applicable to a job in which I will (at least partly) be doing something very similar to what was taught in this class. However, the ways in which the knowledge from this course will potentially be useful to my current planned career path goes far beyond the literal knowledge.</p>
+				<figure style="float: right;">
+					<img src="images/hackathon.PNG" alt="A group of nerds standing in a library with the mayor of Aurora, some hold a certificate." />
+					<figcaption>Me, Sebastion Quiros, and Matthew Mellary taking a group photo after recieving 2nd prize at the first Aroura hackathon.</figcaption>
+					<!-- Sorry the image here has the red arrow, I couldnt find the version without it. -->
+				</figure>
+				<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I have long had an interest in coding, and as such have spent a lot of time learning and practicing. This meant that I went into this course with a lot of prior knowledge. Sometimes there was something I’d learned before, but this class taught me a better way to do it. This has taught me that there are always things to learn, even if I believe that I already know what I’m doing. This will help me to constantly be improving myself and getting better at what I do.</p>
+				<div id="break">
+					<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Coding itself can also teach me a lot of skills that will help me in almost any career I decide on. In coding, there is almost a guarantee that errors will arise, and often times many different errors. Learning to resolve these errors in new and inventive ways is a big part of programming, and one of the main reasons I love it so much. No matter what field I’m in problem-solving will inevitably be an important part of my job, as problems will always arise.</p>
+				</div>
+				<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Furthermore, this class forced me to work towards a goal set by someone else, within their specifications. This meant I had to make changes to my typical workflow and stick rigidly to a plan, which has taught me valuable lessons and given me valuable experience in an environment much closer to a real work environment than what I usually do. I am glad to have had this experience because it changed the way I worked and showed me how I could potentially have to change my methods to fit the industry I would like to work in.</p>
+			</section>
+			
+			<footer>
+				<p>De-Obfuscate Offical Page</p>
+				<p>Nathan Harrison<br />Copyright &copy;2021</p>
+			</footer>
+			
+		</div>
+	</body>
+	
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Pig Latin</title>
+		<meta charset="utf-8"/>
+		<link href="css/main.css" rel="stylesheet" type="text/css">
+		<link rel="icon" href="images/image1.png">
+		
+		<script>
+			
+			function convertToPig(){
+				try{
+					const reader = new FileReader()
+					reader.addEventListener('load', event => {
+						document.body.style.backgroundImage = "url('" + event.target.result + "')";
+					});
+					reader.readAsDataURL(document.pigForm.backImg.files[0]);
+					document.body.style.backgroundSize =  "auto";
+				}
+				catch{}
+				
+				//This handles cow mode
+				if (document.pigForm.cowMode.checked) {
+					document.querySelector("title").innerHTML = "Cow Latin";
+					document.querySelector("link[rel=\"stylesheet\"]").setAttribute("href", "css/cow.css");
+					document.querySelector("link[rel=\"icon\"]").setAttribute("href", "images/image5.png");
+					
+					//This is very sketchy do not try at home
+					var textElementList = []
+					textElementList.push(document.querySelectorAll("p"));
+					textElementList.push(document.querySelectorAll("h1"));
+					textElementList.push(document.querySelectorAll("h2"));
+					textElementList.push(document.querySelectorAll("h3"));
+					for (var i = 0; i < textElementList.length; i++){
+						for (var w = 0; w < textElementList[i].length; w++){
+							textElementList[i][w].textContent = textElementList[i][w].textContent.replace(/Pig/g, "Cow");
+							textElementList[i][w].textContent = textElementList[i][w].textContent.replace(/pig/g, "cow");
+						}
+					}
+				}
+				else{
+					document.querySelector("title").innerHTML = "Pig Latin";
+					document.querySelector("link[rel=\"stylesheet\"]").setAttribute("href", "css/main.css");
+					document.querySelector("link[rel=\"icon\"]").setAttribute("href", "images/image1.png");
+					
+					//This is very sketchy do not try at home
+					var textElementList = []
+					textElementList.push(document.querySelectorAll("p"));
+					textElementList.push(document.querySelectorAll("h1"));
+					textElementList.push(document.querySelectorAll("h2"));
+					textElementList.push(document.querySelectorAll("h3"));
+					
+					for (var i = 0; i < textElementList.length; i++){
+						for (var w = 0; w < textElementList[i].length; w++){
+							textElementList[i][w].textContent = textElementList[i][w].textContent.replace(/Cow/g, "Pig");
+							textElementList[i][w].textContent = textElementList[i][w].textContent.replace(/cow/g, "pig");
+						}
+					}
+				}
+				
+				//for actual translations
+				var letters = /^[A-Za-z]+$/; //This was taken from https://www.w3resource.com/javascript/form/all-letters-field.php#:~:text=JavaScript%3A%20HTML%20Form%20validation%20%2D%20checking%20for%20all%20letters&text=To%20get%20a%20string%20contains,expression%20against%20the%20input%20value.
+				var convStr = document.pigForm.toConv.value;
+				var vowels = ["a","e","i","o","u"];
+				var isAllPunc;
+				var finalStr = "";
+				var prepend = "";
+				var append = "";
+				convStr = convStr.split(" ");
+				for (var i = 0; i < convStr.length; i++){
+					convStr[i] = convStr[i].split("-"); //handles hyphens
+				}
+								
+				//remove null values	
+				for (var i = 0; i < convStr.length; i++){ 
+					convStr[i] = convStr[i].filter(x => x !== "");
+				}	
+				
+				for (var i = 0; i < convStr.length; i++){
+					for (var q = 0; q < convStr[i].length; q++){
+						prepend = "", append = ""; //clear variables
+						
+						isAllPunc = true;
+						for (var z = 0; z < convStr[i][q].length; z++) { //special case for all punctuation
+							if (convStr[i][q][z].match(letters)){
+								isAllPunc = false;
+							}
+						}
+						
+						if (isAllPunc){
+							finalStr += " " + convStr[i][q];
+						}
+						else{
+							while (!convStr[i][q][0].match(letters)){ //get any preceeding punctuation
+								prepend += convStr[i][q][0];
+								convStr[i][q] = convStr[i][q].slice(1);
+							}
+							
+							while (!convStr[i][q][convStr[i][q].length - 1].match(letters)){ //get any proceeding punctuation
+								append += convStr[i][q][convStr[i][q].length - 1];
+								convStr[i][q] = convStr[i][q].slice(0, convStr[i][q].length - 1);
+							}
+							append = append.split(""); //reverse append bc it becomes backwards in the above process
+							append = append.reverse();
+							append = append.join("");
+							
+							var vowelPos = convStr[i][q].length + 1;//sets the vowel pos to a non naturally ocurring number to handle cases with no vowel
+							
+							for (var z = 0; z < vowels.length; z++){ //this for loop gets pos of 1st vowel
+								if (convStr[i][q].toString().indexOf(vowels[z]) != -1) {vowelPos = Math.min(convStr[i][q].toString().indexOf(vowels[z]), vowelPos);}
+							}
+							
+							if (q == 0){
+								if (vowelPos == 0 || vowelPos == convStr[i][q].toString().length + 1) {finalStr += " " + prepend + convStr[i][q].toString() + "-yay" + append;} //for first word
+								else{finalStr += " " + prepend + convStr[i][q].toString().slice(vowelPos) + "-" + convStr[i][q].toString().slice(0,vowelPos) + "ay" + append;}
+							}
+							else {
+								if (vowelPos == 0 || vowelPos == convStr[i][q].toString().length + 1) {finalStr += "-" + prepend + convStr[i][q].toString() + "-yay" + append;} //for any subsequent hyphenated words
+								else{finalStr += "-" + prepend + convStr[i][q].toString().slice(vowelPos) + "-" + convStr[i][q].toString().slice(0,vowelPos) + "ay" + append;}
+							}
+						}
+					}
+				}
+				document.getElementById("output").innerHTML = finalStr;
+				return false;
+			}
+			
+		</script>
+		
+    </head>
+    <body>
+		<div id="maingrid">
+			<header>
+				<h1>Pig Latin</h1>
+				<h3>The one stop shop for all things pig latin.</h3>
+			</header>
+			
+			<section class="sec1">
+				<h2>History of Pig Latin</h2>
+				<!-- content here was taken from https://grammarist.com/interesting-words/pig-latin/#:~:text=Invented%20language%20is%20a%20phenomenon,Pig%20Latin%20Love%20in%201919. -->
+				<p>Pig Latin is not a true language, it is a game in which the beginning consonant or consonant sound of each word is transferred to the end of the word, along with the the syllable -ay, as in igpay atinlay.  If a word begins with a vowel sound, the word is rendered into Pig Latin by adding -yay to the end of the word. </p>
+				<p>Invented language is a phenomenon that stretches across cultures. Pig Latin seems to have been invented by American children sometime in the 1800s, originally it was called Hog Latin. Pig Latin solidified its place in the American consciousness with the release of the song Pig Latin Love in 1919. Note that Pig Latin is properly rendered with capitalization, though the term is occasionally found rendered as pig Latin.</p>
+				<p class="source">Taken from: </p>
+				<a href="https://grammarist.com/interesting-words/pig-latin/#:~:text=Invented%20language%20is%20a%20phenomenon,Pig%20Latin%20Love%20in%201919.">grammarist.com/interesting-words/pig-latin/</a>
+			</section>
+
+			<section class="sec2">
+				<h2>Pig Latin Converter</h2>
+				
+				<form method="post" name="pigForm" onsubmit="return convertToPig()">	
+					<h3>Input</h3>
+					<label for="toConv">Text to Convert:</label>
+					<input type="text" id="toConv" name="toConv" value="You can't put make-up on a pig, but you can try!">
+					<label for="cowMode">Enable Cowmode?:</label>
+					<input type="checkbox" id="cowMode" name="cowMode">
+					<br>
+					<label for="backImg">Select the Background Image:</label>
+					<input type="file" accept=".png, .jpg, .jpeg" id="backImg" name="backImg" value="images/image5.png">
+					<input type="submit">
+				</form>
+				
+				<h3>Output</h3>
+				<p id="output">Type some text and hit convert! Punctuation is supported, however hyphens that are not between words will be deleted.</p>
+			</section>
+		</div>
+		
+		<div id="rulegrid">
+			<!-- Section for all of the Rules-->
+			
+			<section class="secHeader">
+				<h2>Rules of Pig Latin</h2>
+				<h3>All the rules for interpreting Pig Latin</h3>
+			</section>
+			
+			<section class="rules sec3">
+				<img src="images/image2.png" alt="An image of some wheat."/>
+				<h3>Rule 1:</h3>
+				<p>If a word begins with a consonant, all letters before the first vowel are removed and added to the end of the word, then ay is added.</p>
+				<p class="example">Example: wheat -> eat-whay</p>
+			</section>
+			
+			<section class="rules sec4">
+				<img src="images/image3.png" alt="A red box of french fries."/>
+				<h3>Rule 2:</h3>
+				<p>If a word begins with a vowel, or there are no vowels, add -yay to the end of the word.</p>
+				<p class="example">Example: icicle -> icicle-yay</p>
+				<p class="example">Example: fry -> fry-yay</p>
+			</section>
+			
+			<section class="rules sec5">
+				<img src="images/image4.png" alt="An image of a clock."/>
+				<h3>Rule 3:</h3>
+				<p>If a word contains a hyphen, then it is treated as two seperate words, then hyphenated afterwords.</p>
+				<p class="example">Example: part-time -> art-pay-ime-tay</p>
+			</section>
+			
+			<footer>
+				<p>Pig latin official</p>
+				<p>Copyright &copy;1776</p>
+			</footer>
+		</div>
+    </body>
+</html>
