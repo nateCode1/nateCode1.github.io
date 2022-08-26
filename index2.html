@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>Nathan H Portfolio</title>
+	<link rel="stylesheet" href="main.css" />
+	<link rel="icon" href="images/lightBulb.png" />
+	<script >
+		function changeBg() {
+			document.body.style.backgroundSize = "400% " + Math.max(document.documentElement.clientHeight*2, 400) + "%";
+			console.log(document.body.style.backgroundSize);
+		}
+	</script>
+  </head>
+  <body onresize="changeBg()">
+	<div class="wrapper">
+		<h1>Nathan Harrison</h1>
+		<p class="enlarge">I've always had a passion for engineering and design of all kinds, however as I've grown older I've focused much more on coding, specifically software development. The freedom to easily prototype outlandish ideas has drawn me to software engineering, it allows me to try out my wild ideas easily, and on occasion they work out well. Athough I'm still young, I have built myself a base of knowledge in a variety of coding languages like JavaScript (HTML/CSS), Python, C#, Java, and a few others. However, I believe my greatest strength is my ability and willingness to learn new skills presented to me. Theres nothing I love more than being able to translate an idea into reality.</p>
+		
+		<div class="gridWrapper">
+			<div class="project">
+				<h2>De-Obfuscate</h2>
+				<p>Created as a final project for my computer science class, this site includes adaptive design. Also included is a game created in html canvas from scratch using JavaScript. A personal favourite project of mine.</p>
+				<button onClick="window.open('projects/deobf/index.html')">See Project</button>
+			</div>
+			<div class="project">
+				<h2>Score Tracker</h2>
+				<p>A very basic project created using react.js, showcases most of the basic concepts in react in a very barebones application.</p>
+				<button onClick="window.open('https://codepen.io/natecode1/pen/ExbOQxo')">See Project</button>
+			</div>
+			<div class="project">
+				<h2>Cannon Bounce</h2>
+				<p>An web playable game entirely created within 48 hours for a coding competition. Created using the Unity game engine which uses c#.</p>
+				<button onClick="window.open('https://shrek5x.itch.io/cannonbounce')">See Project</button>
+			</div>
+			<div class="project">
+				<h2>Pig Latin</h2>
+				<p>Another project made as part of my school class, it includes adaptive web design aswell as some light regex and javascript. Also contains a fun application of dom manipulation.</p>
+				<button onClick="window.open('projects/pigLatin/index.html')">See Project</button>
+			</div>
+			<div class="project">
+				<h2>PAC-MAN Pumpkin</h2>
+				<p>This project was created as part of a design competition hosted by instructables. A team consisting of myself and two close friends decided to turn a pumkin into an arcade cabinet. I was in charge of coding the game in c++, but also ended up helping with other facets of the designs.</p>
+				<button onClick="window.open('https://www.instructables.com/Make-a-Pumpkin-Into-a-Pacman-Playing-Game-Console/');">See Project</button>
+			</div>
+			<div class="project">
+				<h2>Aurora Hackathon</h2>
+				<p>One of my first experiences with software development was a local hackathon in which participants had to create an app to improve life in the town, in just 30 hours. Sadly the app itself has been lost, but my team did earn 2nd place, and return the following year to finish 1st. The app was created for android devices using Android Studio and Java.</p>
+			</div>
+			<div class="project wide">
+				<h2>Miscellaneous Experience</h2>
+				<ul>
+					<h3>Dreamforce Presentation</h3>
+					<p>In 2018 I was given the chance to help create a demo to present at the Dreamforce tradeshow. I used a Raspberry Pi and Salesforce's AI vision service to detect what my pet cat wanted, then send a notification. See more <a href="https://sfdc.co/DreamforceCat" target="_blank">here</a>.</p>
+					
+					<h3>Coding Competitions</h3>
+					<p>In the past few years I have begun competing in some competitive coding events; I have competed in: Google Kickstart, Google Codejam, and the Canadian Computing Competition all using Python3.</p>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+  </body>
+</html>
