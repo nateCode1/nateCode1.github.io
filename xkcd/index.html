@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <title>xkcd bacgkround</title>
+    <link rel="icon" href="images/favi.ico" />
+  </head>
+
+  <script>
+    // Dear person poking around my code: why?
+    // Anyways here's a little JS joke for you.
+    // How does the front-end-dev baker identify his bread
+    // He uses isNaaN
+    // Get it?
+    // I'm sure you do
+
+    window.addEventListener("DOMContentLoaded", () => {
+      //if not on windows
+      if (navigator.platform.indexOf("Win") == -1) {
+        document.getElementById("win-warn").style.display = "block";
+      }
+
+      document.getElementById("demo").src = `images/${['time', 'ketchup', 'apple', 'stop_looking_at_my_files', 'super_secret'][Math.floor(Math.random() * 4 < 3.98 ? Math.random() * 4 : 4)]}.png`
+    });
+  </script>
+
+  <body style="background-color: #96a8c8">
+    <div id="win-warn" style="display: none; padding: 10px 20px; font-size: 13px;" class="container">
+      <p>
+        You appear to be using a non-windows machine, and this tool currently only supports windows. 
+      </p>
+      <p>You're free to look around here if you like, or maybe even make a fork if you really want.</p>
+    </div>
+    <div class="container">
+      <div
+        style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap"
+      >
+        <h1 style="font-size: 3em; color: #6e7b91">xkcd</h1>
+        <h2>Desktop Background Changer</h2>
+      </div>
+      <h5>Note that this site is NOT made by (nor affiliated with) Randall Munroe (yet). If you want to check out his work please go to <a target="_blank" href="https://xkcd.com/">xkcd.com</a>.</h5>
+      <p style="margin-top: 25px;">Have you ever been staring at your desktop and said "I wish this was displaying the latest xkcd comic by renown author Randall Munroe"?</p>
+      <p>Well I doubt it, but if you're like me and love his work this may be for you anyways.</p>
+      <p>The xkcd background changer does exactly what it says on the tin: it automatically changes your desktop to be the latest, or a random xkcd comic.</p>
+    </div>
+    <div class="container">
+      <h2>Features!</h2>
+      <p>The xkcd background changer boasts a number of features that will make you go: "is that it?". These features include and are limited to...</p>
+      <ul>
+        <li>Automatically rendering at the resolution of your monitor (untested)</li>
+        <li>Lacking almost any quality assurance</li>
+        <li>Customizable colors</li>
+        <li>Displaying title AND alt text!</li>
+        <li>A <span style="text-decoration: line-through;">very user friendly</span> GUI</li>
+        <li>Only works on windows currently</li>
+      </ul>
+
+      <p>Don't you want your desktop to look like this?</p>
+      <img id="demo" src="images/time.png" title="I bet you thought I'd write something clever here." />
+    </div>
+
+    <div style="display: flex; max-width: 640px; margin: auto; flex-wrap: wrap; justify-content: space-between;">
+      <div class="container" style="margin: 0; flex-basis: 41%; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <h3>Install as .exe</h3>
+          <p>You can install the xkcd desktop background changer as an executable file. Its portable, its quick, its easy. However, it does require you to trust that I am not distributing a virus. Which I am not by the way <sup>[Citation Needed]</sup>.</p>
+        </div>
+        <a href="xkcd-bg.exe"><button>Download</button></a>
+      </div>
+      <div class="container" style="margin: 0; flex-basis: 41%;">
+        <h3>Install with Python</h3>
+        <p>You can install the xkcd desktop background changer by cloning the repo from my github, its a little more difficult than the exe, but it has the advantage of you being able to see exactly what it is your downloading. Please excuse my bad code.</p>
+        <a href="https://github.com/nateCode1/xckd-bg" target="_blank"><button>Take me to the Repo</button></a>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Here's the GUI</h2>
+      <p>Now thats what I call usable! <sup>[No its not]</sup></p>
+      <div style="display: flex; justify-content: center;">
+        <img src="images/gui.png" title="I bet you thought I'd write something clever here." style="max-width: 400px;" />
+      </div>
+    </div>
+
+    <div class="container">
+      <h3>The last div</h3>
+      <p style="margin-bottom: 5px;">In the event this needs to be taken down or changed for legal or security reasons you can reach me here:</p>
+      <a href="mailto:nathanh.vision@gmail.com">nathanh.vision@gmail.com</a>
+      <p>Thanks!</p>
+    </div>
+  </body>
+
+  <style>
+    * {
+      font-family: Lucida, Helvetica, sans-serif;
+    }
+
+    sup {
+      font-weight: 550;
+    }
+
+    p {
+      line-height: 1.5;
+      font-size: 17px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    img {
+      max-width: 100%;
+      border: 2px solid black;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #6E7B91;
+      border: 1.5px solid #3b3b3b;
+      color: #FFF;
+      font-weight: 600;
+      font-size: 20px;
+      padding: 1.5px 12px;
+      box-shadow: 0 2px 4px 0 gray;
+      margin: 3px;
+      border-radius: 5px;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 7px 0 #ccc;
+    }
+
+    h1,
+    h2,
+    h3, h4, h5, h6 {
+      font-variant: small-caps;
+      font-weight: 800;
+      margin-bottom: 10px;
+      margin-top: 10px;
+    }
+
+    .container {
+      border-radius: 10px;
+      background-color: white;
+      padding: 20px;
+      border: 1px solid black;
+      margin: 20px auto;
+      max-width: 600px;
+      width: 100%;
+    }
+  </style>
+</html>
