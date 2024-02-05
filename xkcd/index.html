@@ -21,10 +21,21 @@
       }
 
       document.getElementById("demo").src = `images/${['time', 'ketchup', 'apple', 'stop_looking_at_my_files', 'super_secret'][Math.floor(Math.random() * 4 < 3.98 ? Math.random() * 4 : 4)]}.png`
+
+      window.addEventListener("mousemove", (e) => {
+        
+        let fac = Math.pow(Math.abs(e.clientY / window.innerHeight - 0.5),1.5) * 0.7 + Math.abs(e.clientX / window.innerWidth - 0.5) * 2 * 0.3;
+        let col1 = [150, 168, 200]
+        let col2 = [100, 138, 178]
+
+        col1 = col1.map((e,i) => e * (1-fac) + col2[i]*fac)
+
+        document.body.style.backgroundColor = `rgb(${col1.join(',')})`
+      });
     });
   </script>
 
-  <body style="background-color: #96a8c8">
+  <body style="background-color: #96a8c8; transition: background-color 0.2s;">
     <div id="win-warn" style="display: none; padding: 10px 20px; font-size: 13px;" class="container">
       <p>
         You appear to be using a non-windows machine, and this tool currently only supports windows. 
@@ -63,13 +74,13 @@
       <div class="container" style="margin: 0; flex-basis: 41%; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <h3>Install as .exe</h3>
-          <p>You can install the xkcd desktop background changer as an executable file. Its portable, its quick, its easy. However, it does require you to trust that I am not distributing a virus. Which I am not by the way <sup>[Citation Needed]</sup>.</p>
+          <p>You can install the xkcd desktop background changer as an executable file. Its portable, its quick, its easy. However, it does require you to trust that I am not distributing a virus, which I am not by the way <sup>[Citation Needed]</sup>.</p>
         </div>
         <a href="xkcd-bg.exe"><button>Download</button></a>
       </div>
       <div class="container" style="margin: 0; flex-basis: 41%;">
         <h3>Install with Python</h3>
-        <p>You can install the xkcd desktop background changer by cloning the repo from my github, its a little more difficult than the exe, but it has the advantage of you being able to see exactly what it is your downloading. Please excuse my bad code.</p>
+        <p>You can install the xkcd desktop background changer by cloning the repo from my github, its a little more difficult than the exe, but it has the advantage of you not needing to trust me, and you could customize it if you wish.</p>
         <a href="https://github.com/nateCode1/xckd-bg" target="_blank"><button>Take me to the Repo</button></a>
       </div>
     </div>
@@ -84,9 +95,10 @@
 
     <div class="container">
       <h3>The last div</h3>
+      <p>Site & tool created by Nathan Harrison (that's me).</p>
       <p style="margin-bottom: 5px;">In the event this needs to be taken down or changed for legal or security reasons you can reach me here:</p>
       <a href="mailto:nathanh.vision@gmail.com">nathanh.vision@gmail.com</a>
-      <p>Thanks!</p>
+      <p>Thanks for stopping by!</p>
     </div>
   </body>
 
