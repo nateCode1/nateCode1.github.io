@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS Oneliners</title>
+  <script>
+    let inputCode = "";
+    let currentProblem;
+
+    // HTML element references
+    let errorMessage;
+    let problemContainer;
+    let problemDescription;
+    let testcaseContainer;
+    let codeInput;
+    let codeSyntaxHighlighted;
+    let hintContainer;
+
+    function toggleCollapsibleSection(element) {
+      element.classList.toggle("active");
+      var content = element.nextElementSibling;
+      if (content.style.maxHeight){
+        content.style.maxHeight = null;
+      } else {
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+    }
+
+    function registerCollapsibleSection(element) {
+      element.addEventListener("click", () => toggleCollapsibleSection(element));
+    }
+
+    function addKnowledgeLinkListenerRecursive(el) {
+      if (el.tagName === 'A') {
+        let href = el.getAttribute('href')
+        if (href.split("-").slice(-1)[0] == "knowledge") {
+          el.addEventListener("click", () => {
+            toggleCollapsibleSection(document.getElementById(href.slice(1)))
+          })
+        }
+      }
+      let children = el.children;
+      for (let i = 0; i < children.length; i++) {
+        addKnowledgeLinkListenerRecursive(children[i])
+      }
+    }
+
+    addEventListener("load", (event) => { 
+      errorMessage = document.getElementById("error-message")
+      easyProblemContainer = document.getElementById("easy-problems")
+      mediumProblemContainer = document.getElementById("medium-problems")
+      hardProblemContainer = document.getElementById("hard-problems")
+      problemDescription = document.getElementById("problem-description")
+      testcaseContainer = document.getElementById("testcase-container")
+      codeInput = document.getElementById("code-input")
+      codeSyntaxHighlighted = document.getElementById("code-syntax-highlighted")
+      hintContainer = document.getElementById("hint-container")
+
+      // Syntax highlight knowledge section
+      document.querySelectorAll("code").forEach(i => i.innerHTML = getSyntaxHighlighted(i.textContent))
+
+      // Adaptive highlighting for code input
+      codeInput.addEventListener("selectionchange", (event) => {
+        codeSyntaxHighlighted.innerHTML = getSyntaxHighlighted(codeInput.value, currentProblem.variables, codeInput.selectionStart)
+      })
+
+      // Collapsible sections
+      // adapted from https://www.w3schools.com/howto/howto_js_collapsible.asp
+      let collapsibleSectionElements = document.getElementsByClassName("collapsible")
+      for (let i = 0; i < collapsibleSectionElements.length; i++)
+        registerCollapsibleSection(collapsibleSectionElements[i])
+
+      setActiveProblem(allProblems[0].title)
+
+      updateProblemContainer()
+
+      addKnowledgeLinkListenerRecursive(document)
+    })
+
+    class Problem {
+      constructor(title, description, variables, testcases, solution, hints=[]) {
+        this.title = title
+        this.description = description
+        this.variables = variables
+        this.testcases = testcases
+        this.solution = solution
+        this.hints = hints
+      }
+    }
+    
+    class Testcase {
+      constructor(values, expectedOutput) {
+        this.values = values
+        this.expectedOutput = expectedOutput
+      }
+    }
+
+    function updateProblemContainer() {
+      updateProblemSection(easyProblemContainer, easyProblems)
+      updateProblemSection(mediumProblemContainer, mediumProblems)
+      updateProblemSection(hardProblemContainer, hardProblems)
+    }
+
+    function updateProblemSection(element, problemList) {
+      element.innerHTML = problemList.map(i =>
+        `<div style="position: relative;" onclick="setActiveProblem('${i.title}')" class="problem">
+          ${localStorage.getItem(`jsol_passed_${i.title}`) ? `<p style="position: absolute; top: 3px; right: 3px; color: green; font-size: 0.7em; margin: 0;">Passed!</p>` : ""}
+          <p>${i.title}</p>
+         </div>
+        `
+      ).join("")
+    }
+
+    function getSyntaxHighlighted(text, variables = false, cursorPos = false,) {
+      let colorMap = {}
+      let highlightMap = {}
+
+      let bracketColours = ["#7b4df0", "#a734d1", "#e343e8"]
+      let curlyBracketColours = bracketColours;
+      let squareBracketColours = "#10a7c9";
+      let ternaryColours = ["#c4eb59", "#65cf3e"]
+      let operatorColour = "#3380de"
+      let keywordColour = "#3380de"
+      let functionColour = "#e9db19"
+      let variableColour = "#8dd9a2"
+      let stringColour = "#e07c0b"
+
+      let selectedBracketHighlightColour = "rgba(250, 229, 2, 0.2)"
+      
+      let functionHighlightRegex = /(\w+)\(/g
+      let squareBracketHighlightRegex = /[\[\]]/g
+      let operatorHighlightRegex = /[%+\-/*&|!=<>]|(\?{2})/g
+      let stringDoubleQuoteHighlightRegex = /".*?"/g
+      let stringSingleQuoteHighlightRegex = /'.*?'/g
+      let keywordList = ["let", "const", "var", "in", "function", "true", "false", "for", "while", "return"]
+
+      let bracketColorIndex = 0;
+      let curlyBracketColorIndex = 0;
+      let ternaryColorIndex = 0;
+
+      // Start inclusive, end exclusive
+      let setColorRange = (color, start, end) => { for (let i = start; i < end; i++) colorMap[i] = color }
+      let setColorLength = (color, start, length) => setColorRange(color, start, start + length)
+
+      // Highlight brackets in pairs
+      text.split("").forEach((i, j) => {
+        if (i == "(") colorMap[j] = bracketColours[bracketColorIndex++ % bracketColours.length]
+        else if (i == ")") colorMap[j] = bracketColours[--bracketColorIndex % bracketColours.length]
+      });
+      
+      // Highlight curly brackets in pairs
+      text.split("").forEach((i, j) => {
+        if (i == "{") colorMap[j] = curlyBracketColours[curlyBracketColorIndex++ % curlyBracketColours.length]
+        else if (i == "}") colorMap[j] = curlyBracketColours[--curlyBracketColorIndex % curlyBracketColours.length]
+      });
+
+      // TODO: consider that this may fail in certain cases
+      // Highlight Ternary's in pairs
+      text.split("").forEach((i, j) => {
+        if (i == "?" && (text[j+1] ?? "") != "?" && (text[j-1] ?? "") != "?") colorMap[j] = ternaryColours[ternaryColorIndex++ % ternaryColours.length]
+        else if (i == ":") colorMap[j] = ternaryColours[--ternaryColorIndex % ternaryColours.length]
+      });
+
+      // Highlight bracket pairs
+      if (cursorPos) {
+        const highlightCorresponding = (index) => {
+          let allBrackets = "[](){}"
+          if (!allBrackets.includes(text[index]))
+            index -= 1
+          if (!allBrackets.includes(text[index]))
+            return
+
+          let allOpen = "[({"
+          let isOpenBracket = allOpen.includes(text[index])
+          let iterationDirection = isOpenBracket ? 1 : -1
+
+          let correspondingBracket = {"[": "]", "]": "[", "(": ")", ")": "(", "{": "}", "}": "{"}[text[index]]
+          highlightMap[index] = selectedBracketHighlightColour
+
+          let depth = 0;
+          for (let i = index + iterationDirection; i >= 0 && i < text.length; i += iterationDirection) {
+            if (text[i] == correspondingBracket)
+              depth -= 1
+            if (text[i] == text[index])
+              depth += 1
+
+            if (depth < 0) {
+              highlightMap[i] = selectedBracketHighlightColour
+              break
+            }
+          }
+
+        }
+
+        highlightCorresponding(cursorPos)
+      }
+
+      [...text.matchAll(functionHighlightRegex)].forEach(i => setColorLength(functionColour, i.index, i[1].length));
+      [...text.matchAll(operatorHighlightRegex)].forEach(i => setColorLength(operatorColour, i.index, i[0].length));
+      [...text.matchAll(squareBracketHighlightRegex)].forEach(i => setColorLength(squareBracketColours, i.index, i[0].length));
+      [...text.matchAll(stringDoubleQuoteHighlightRegex)].forEach(i => setColorLength(stringColour, i.index, i[0].length));
+      [...text.matchAll(stringSingleQuoteHighlightRegex)].forEach(i => setColorLength(stringColour, i.index, i[0].length));
+
+      keywordList.forEach(keyword => [...text.matchAll(new RegExp(`(\\b${keyword}\\b)`, "g"))].forEach(i => setColorLength(keywordColour, i.index, i[1].length)))
+
+      // This is flawed, and kinda ugly
+      // if (variables) variables.forEach(variable => [...text.matchAll(new RegExp(`(\\b${variable}\\b)`, "g"))].forEach(i => setColorLength(variableColour, i.index, i[1].length)))
+
+      let constructed = text.split("").map((i,j) => `<span style="color: ${colorMap[j] ?? "white"}; background-color: ${highlightMap[j] ?? "transparent"};">${i}</span>`).join("")
+
+      return constructed
+    }
+
+    function syncScroll(element) {
+      codeSyntaxHighlighted.scrollTop = element.scrollTop;
+      codeSyntaxHighlighted.scrollLeft = element.scrollLeft;
+    }
+
+    function updateCodeValue(inputValue, forceDisableBracketHighlight = false) {
+      errorMessage.textContent = ""
+      if (inputValue.includes(";")) {
+        errorMessage.innerHTML += "Use of semicolons is not permitted<br>"
+        codeInput.value = inputCode;
+        return
+      }
+      if (inputValue.includes("\n")) {
+        errorMessage.innerHTML += "Use of newlines is not permitted<br>"
+        inputValue = inputValue.replaceAll("\n", "");
+        codeInput.value = inputValue;
+      }
+
+      inputCode = inputValue;
+
+      localStorage.setItem(`jsol_saved_code_${currentProblem.title}`, inputValue);
+      codeSyntaxHighlighted.innerHTML = getSyntaxHighlighted(inputValue, currentProblem.variables, forceDisableBracketHighlight ? false : codeInput.selectionStart)
+    }
+
+    function setActiveProblem(problemTitle) {
+      const getSyntaxHighlightedHint = (hint) => {
+        let codeRegex = /<code>(.*?)<\/code>/g;
+        return hint.replaceAll(codeRegex, (match, codeContent) => `<code>${getSyntaxHighlighted(codeContent)}</code>`);
+      };
+
+      let problem = allProblems.find(i => i.title == problemTitle)
+
+      problemDescription.innerHTML = problem.description
+      currentProblem = problem
+
+      inputCode = localStorage.getItem(`jsol_saved_code_${problemTitle}`) ?? ""
+      codeInput.value = inputCode
+      updateCodeValue(inputCode, true)
+
+      hintContainer.innerHTML = `
+      ${problem.hints.map((i,j) => `
+        <button type="button" class="collapsible" id="hint-${j}">Hint #${j+1}</button>
+        <div class="collapsible-content hint-container">
+          <div style="height: 10px;"></div>
+          <p>${getSyntaxHighlightedHint(i)}</p>
+        </div>
+      `).join("")}
+      <button type="button" class="collapsible" id="sample-solution">Show the Answer</button>
+      <div class="collapsible-content">
+        <div style="height: 10px;"></div>
+        <p><code>${getSyntaxHighlighted(problem.solution)}</code></p>
+        <p class="tiny-text">Note that problems have multiple solutions, this is just one example.</p>
+      </div>`
+
+      problem.hints.forEach((i,j) => registerCollapsibleSection(document.getElementById(`hint-${j}`)))
+      registerCollapsibleSection(document.getElementById("sample-solution"))
+
+      let problemExampleElements = document.getElementsByClassName("problem-example")
+      for (let i = 0; i < problemExampleElements.length; i++) {
+        registerCollapsibleSection(problemExampleElements[i])
+      }
+      
+      let hintElements = document.getElementsByClassName("hint-container")
+      for (let i = 0; i < hintElements.length; i++) {
+        addKnowledgeLinkListenerRecursive(hintElements[i])
+      }
+
+      testcaseContainer.innerHTML = testcaseTable()
+
+      problemDescription.scrollIntoView()
+    }
+
+    function outputsEqual(a, b) {
+      if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false;
+        return a.every((val, i) => outputsEqual(val, b[i]));
+      }
+
+      if (Array.isArray(a) || Array.isArray(b)) {
+        return false;
+      }
+
+      return a === b;
+    }
+
+    function testcaseTable(results = false) {
+      let testcasePassed = results ? results.every(i => i[1]) : false;
+      return `
+        <table border="1">
+          <tr>
+            ${currentProblem.variables.map(i => `<th>${i}</th>`).join("")}
+            <th>Output</th>
+            <th>Expected</th>
+            <th>Passed?</th>
+          </tr>
+          ${currentProblem.testcases.map((i, index) => 
+            `<tr>
+              ${i.values.map(j => 
+                `<td>${JSON.stringify(j).replaceAll(" ", JSON.stringify(j).length > 40 ? " " : "&nbsp")}</td>`
+              ).join("")}
+              <td>${results ? results[index][0] : ""}</td>
+              <td>${i.expectedOutput}</td>
+              <td style="color: ${results ? (results[index][1] ? "green" : "red") : ""}">${results ? results[index][1] : ""}</td>
+            </tr>`
+          ).join("")}
+        </table>
+        ${results ? `<p style="color: ${testcasePassed ? "green" : "red"}"> Test ${testcasePassed ? "PASSED" : "NOT PASSED"} </p>` : ""}
+      `
+    }
+
+    function runCode() {
+      results = []
+
+      currentProblem.testcases.forEach(i => {
+        let testcaseInput = `let fn = (${currentProblem.variables.join(",")}) => {return ${inputCode}}; fn(${i.values.map(j => JSON.stringify(j)).join(",")})`;
+        try {
+          out = eval?.(testcaseInput)
+        }
+        catch (e) {
+          errorMessage.innerHTML = "<u>Code failed to run:</u><br> " + e
+        }
+        // console.log(`Out ${out}, Expected ${i.expectedOutput}`)
+        results.push([out, outputsEqual(out, i.expectedOutput)])
+      })
+    
+      let testPassed = results.every(i => i[1])
+      if (testPassed) localStorage.setItem(`jsol_passed_${currentProblem.title}`, true);
+
+      testcaseContainer.innerHTML = testcaseTable(results)
+      updateProblemContainer()
+    }
+
+    // TO ADD:
+    // GCD mayhaps
+    // First missing integer
+    // Make equal by swapping elements (DONE) - REMIX: you are allowed to swap elements between the two lists
+    // Parallel list attribute sort
+
+    let testCases0 = [new Testcase([5], 10), new Testcase([0], 5), new Testcase([-17], -12)]
+    let p0 = new Problem("Add 5", "Create an expression that returns the value of n + 5 (Hint: \"n + 5\")", ["n"], testCases0, "n+5")
+    let testCases1 = [new Testcase([5, 10], 10), new Testcase([-3, 7], 7), new Testcase([-15, 8], -15)]
+    let p1 = new Problem("Higher Magnitude Number", "Create an expression that returns x if |x| > |y|, and returns y otherwise.", ["x", "y"], testCases1, "x*x > y*y ? x : y", [`You may find the <a href="#ternary-knowledge">ternary operator</a> to be helpful.`, `|x| > |y| if and only if x*x > y*y`])
+    let testCases2 = [new Testcase([[0,0,0,0,0,0], 1], [1,1,2,3,5,8]), new Testcase([[0,0,0,0,0,0,0], 4], [4,4,8,12,20,32,52]), new Testcase([[0,0,0,0], 100], [100,100,200,300])]
+    let p2 = new Problem("Multiplied Fibonacci", `Create an expression that fills an array of zeros "n" with the Fibonacci sequence (starting with 1), with the value of each element multiplied by an integer "m".`, ["n", "m"], testCases2, "n.map((i,j) => n[j] = (j > 1 ? n[j-1] + n[j-2] : m))", [`You may find <a href="#map-knowledge">array.map()</a> and <a href="#ternary-knowledge">ternary operator</a> helpful. Knowledge of <a href="#array-operator-functions-knowledge">array operator functions</a> may also come in handy.`, `Computing the fibbonaci sequence then multiplying it by m is the same as computing the sequence normally, but starting with m instead of 1.`])
+    // p3 has been retired as an inbuilt function can accomplish it. Oops.
+    // let testCases3 = [new Testcase([[["Hi", "World"], 1, 1, 0, [1]]], ["Hi", "World", 1, 1, 0, 1]), new Testcase([[[[[[[["Nested?"]]]]]]]], ["Nested?"]), new Testcase([[[1,2], [3,4,5]]], [1,2,3,4,5])]
+    // let p3 = new Problem("Flatten Array", "Create an expression that returns flattened version of a given list x", ["x"], testCases3)
+    let testCases4 = [
+      new Testcase([["a"], ["abba", "boney m", "earth wind and fire", "david bowie"]], 1),
+      new Testcase([["c", "v", "p", "l"], ["my right arm", "fishing alone", "chairs around a table", "veritable feast", "dog man"]], 2),
+      new Testcase([["?", "o"], ["awful language?", "i wish i could understand", "but i think you are wrong.", "javascript is best!"]], 1),
+    ]
+    let p4 = new Problem("Broken Keyboard", `Given an array of broken keys on a keyboard "b", and an array of strings "w": return the number of strings from w that can be typed without any of the broken keys.`, ["b", "w"], testCases4, "w.filter(i => !b.some(j => i.includes(j))).length", [`You may find <a href="#filter-knowledge">array.filter()</a>, <a href="#some-every-knowledge">array.some()</a>, and <a href="#array-includes-knowledge">array.includes()</a> helpful.`])
+    let testCases5 = [
+      new Testcase([[1,6,2,-5,1,0,-1], 2], 3),
+      new Testcase([[8,7,-2,4,10,-5,3,7,-1,-1,10], 6], 20),
+      new Testcase([[2,9,7,-1,8,7,12,4,9,6,1,-5,2], 4], 22),
+    ]
+    let p5 = new Problem("Frog Hop", `
+    <div>
+      <span>You are a frog.</span>
+      <span><img width="50" height="30" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNvHNi6o8yMNtNVUeMOwtpNEoaIFR3nOY3aw&s" alt="picture of a frog" />.<span>
+      <span>There is a sequence of lily pads ahead of you, each with a numerical attractiveness score given in an array "l", where l[i] is the attractiveness of the ith lily pad. After landing on a lily pad, you must hop forward by "h" pads. This repeats until you hop off the end of the lily pads.</span>
+    </div>
+    <br>
+    Your goal is to maximize the sum of the attractiveness scores of the lily pads you land on by choosing which lily pad to start on. Create an expression that returns the maximum attractiveness score achievable.
+    <br><br>
+    <button type="button" class="collapsible problem-example"><b>Example:</b> l = [4,2,-2,2,1], h = 2</button>
+    <div class="collapsible-content">
+      <br> If you start on the first lily pad you will land on the lily pad at index 0, index 0+h=2, and index 2+h=4. The sum of their attractiveness scores is: <br> l[0] + l[2] + l[4] = 4 + (-2) + 1 = 3
+      <br> If you start on the second lily pad you will land on the lily pad at index 1, and at 1+h=3. The sum of their attractiveness scores is: <br> l[1] + l[3] = 2 + 2 = 4
+      <br> You could also start on the third, fourth, or fifth lily pad, but neither is better than starting on the second.
+      <br> Therefore the best score you can achieve is 4, so your expression should return 4.
+    </div>
+    `, ["l", "h"], testCases5, "Math.max(...l.map((i,o) => l[l.length - 1 - o] = l[l.length - 1 - o] + (l[l.length - 1 - o + h] ?? 0)))", [`The following functions may be helpful: <a href="#map-knowledge">array.map()</a> and <a href="#math-knowledge">Math.max()</a>.`, `Try calculating the scores for the final index first, then working backwards. Keep in mind that when using <a href="#map-knowledge">array.map()</a> you can <a href="#array-operator-functions-knowledge">get the index</a> as well as the item.`, `If you know the final score achieved when starting from lily pad i, you can calculate the final score for lily pad i-h by adding l[i-h].`])
+    let testCases6 = [new Testcase([[2,3,4]], 9), new Testcase([[10,10,10,1,10,10,4]], 30), new Testcase([[-3, 15, 0, -20, -999]], 12)]
+    let p6 = new Problem("3 Greatest", "Create an expression that returns the sum of the three greatest values in an array n", ["n"], testCases6, "n.sort((a,b) => b-a).slice(0,3).reduce((a,b) => a+b)", [`You may find the following functions helpful: <a href="#slice-knowledge">array.slice()</a>, <a href="#sort-knowledge">array.sort()</a>, and <a href="#reduce-knowledge">array.reduce()</a>.`])
+    let testCases7 = [new Testcase([2,3,4], 4), new Testcase([18,-3,3000], -3), new Testcase([18, 3, 7], 7), new Testcase([100, -100, 372], 100)]
+    let p7 = new Problem("Coolest Number Around", `At the most recent number convention, 7 was crowned the coolest number around. You are tasked with determining which is the least un-cool of three numbers: "a", "b", or "c". A numbers un-coolness is equal to the difference between that number and 7.<br> Create an expression to return the number with the smallest un-coolness out of a, b and c. There will never be a draw.`, ["a", "b", "c"], testCases7, "(a-7)*(a-7) < (b-7)*(b-7) ? (a-7)*(a-7) < (c-7)*(c-7) ? a : c : (b-7)*(b-7) < (c-7)*(c-7) ? b : c", [`You can chain <a href="#ternary-knowledge">ternary operators</a>.<br>Example: check if n is between 3 and 7: <p><code>n > 3 ? (n < 7 ? true : false) : false</code></p>`])
+    let testCases8 = [
+      new Testcase([[2,3,4], [4,2,3]], true),
+      new Testcase([[1,3,12,12], [12,3,1,10]], false),
+      new Testcase([[8,6,7,5,3,0,9], [0,3,5,6,7,8,9]], true),
+      new Testcase([[10,10,10,2], [10,2,10,10]], true),
+      new Testcase([[2,3,4], [2,3,4,5]], false),
+    ]
+    let p8 = new Problem("Rearrange to Make Equal", `You are given two arrays: "a" and "b". You need to create an expression that determines if the two arrays can be made equal only by swapping the positions of elements within a list. <br>The two arrays are equal if: a[i] == b[i] for all valid i in either list.`, ["a", "b"], testCases8, "a.length != b.length ? false : a.sort((a,b) => a-b).every((i,j) => b.sort((a,b) => a-b)[j] == i)", [`You may find the following functions helpful: <a href="#some-every-knowledge">array.every()</a> and <a href="#sort-knowledge">array.sort()</a>.`, `If the arrays aren't of equal length, it is impossible to make the lists equal by swapping.`, `It is possible to rearrange the elements of an array in any arbitrary order using only swaps.`, `The two arrays can be rearranged to be equal if and only if the quantity of each element in array a is equal to the quantity of that element in array b.`])
+    let testCases9 = [
+      new Testcase([["+","+","-","+","+"]], 3),
+      new Testcase([["-","-","-","+"]], 1),
+      new Testcase([["-","-"]], 0),
+      new Testcase([["-","+","-","-","-","+","-","-","+"]], 1),
+    ]
+    let p9 = new Problem("Ascend and Descend Stairs", `You are in a building, and have an array of instructions "a". Every element in a is either a "+" or "-". "+" means go up one floor, "-" means go down one floor. You must execute these instructions sequentially. You start on the 0th floor, and <b>can not</b> go below it. If you are instructed to go below the 0th floor, you simply remain where you are. Create an expression to return what floor of the building you end up on.`, ["a"], testCases9, `a.reduce((i,j) => Math.max(i + (j == '+' ? 1 : -1), 0), 0)`, [`Using <a href="#reduce-knowledge">array.reduce()</a> is likely to be extremely helpful.`, `You can use a ternary to map a character to a number representing the desired change in floor like so: <p><code>char == "+" ? 1 : -1</code></p>`, `After each instruction, take the max of the current floor and 0 to respect not going below the 0th floor.`])
+    let testCases10 = [
+      new Testcase([[1, 0, 0, 1, 0]], [1, 0]),
+      new Testcase([[1, 0, 1, 1, 0, 0, 0, 1, 0]], [1, 0]),
+      new Testcase([[1, 0, 1, 1, 0, 0]], [1, 0, 1, 1, 0, 0]),
+      new Testcase([[1, 0, 0]], []),
+      new Testcase([[1, 0, 0, 1, 1, 0, 0, 0, 1]], [1]),
+      new Testcase([[0, 0, 0, 1, 1, 1]], [1, 1, 1]),
+    ]
+    let p10 = new Problem("0s <= 1s", `You are given an array of 1s and 0s "a". Imagine walking through that list. You begin at the start of the list, and walk one element to the right at a time. If you have ever passed more 0s than 1s, then you immediately consider all the elements you have passed as bad, and stop considering them moving forward. Once you get to the end of the list, any element not labelled bad is considered good. Create an expression to return a subarray containing all the good elements of the list.
+    <br><br>
+    <button type="button" class="collapsible problem-example"><b>Example:</b> a = [1,0,0,1,0]</button>
+    <div class="collapsible-content">
+      <p> Step past the first element. So far we have passed [1]. This means there are 1 ones and 0 zeros.</p>
+      <p> Step past the second element. So far we have passed [1, 0]. This means there are 1 ones and 1 zeros.</p>
+      <p> Step past the third element. So far we have passed [1, 0, 0]. This means there are 1 ones and 2 zeros. So we label all these elements as bad, stop considering them going forward, and keep moving.</p>
+      <p> Step past the fourth element. So we are currently considering [1]. This means there are 1 ones and 0 zeros.</p>
+      <p> Step past the fifth element. So we are currently considering [1,0]. This means there are 1 ones and 1 zeros.</p>
+      <p> Now we have reached the end of the list. Our good elements are [1,0], as everything else has been labelled as bad.</p>
+    </div>
+    `, ["a"], testCases10, `a.filter((i,j) => Array(a.length - j).fill(0).map((a,b) => b + j).every(k => a.slice(0,k+1).map(l => l == 1 ? 1 : -1).reduce((a,b) => b == 1 ? Math.max(a+b,1) : a+b, 0) >= 0))`, [`If your solution in any way resembles mine, these may be of use: <a href="#map-knowledge">array.map()</a>, <a href="#sort-knowledge">array.sort()</a>, <a href="#filter-knowledge">array.filter()</a>, <a href="#some-every-knowledge">array.every()</a>, <a href="#reduce-knowledge">array.reduce()</a>, <a href="#slice-knowledge">array.slice()</a>.`])
+    let testCases11 = [
+      new Testcase(["Hello. how are you today?"], "Hello. How Are You Today?"),
+      new Testcase(["many words make a sentence"], "Many Words Make A Sentence"),
+      new Testcase(["woW whAt a stRaNgE caSe"], "WoW WhAt A StRaNgE CaSe"),
+    ]
+    let p11 = new Problem("Capitalize First Letter", `
+      Given a string "s", return the string, but with the first letter of each word capitalized.
+      <br> You can get the upper case version of a string using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toUpperCase" target="blank">String.toUpperCase()</a>
+    `, ["s"], testCases11, `s.split(" ").map(i => i[0] = i[0].toUpperCase() + i.slice(1)).join(" ")`, [`You may find the following functions helpful <a href="#split-knowledge">string.split()</a>, <a href="#map-knowledge">array.map()</a>, <a href="#join-knowledge">array.join()</a>, <a href="#slice-knowledge">string.slice()</a>.`])
+    let testCases12 = [
+      new Testcase([[1,2,3,4,5]], false),
+      new Testcase([[]], true),
+      new Testcase([[8,6,7,5,3,0,9]], false),
+      new Testcase([[1,5,10,20]], true),
+    ]
+    let p12 = new Problem("Even Length Array", `
+      Create an expression that returns true if an array "a" has an even number of elements, and false otherwise.
+    `, ["a"], testCases12, `a.length % 2 == 0`, [`The length of an array "a" is equal to a.length`, `The modulo operator gives the remainder of a division.<br>Example:<br>10 / 3 = 3 with remainder 1<br>This means: 10 % 3 = 1`])
+    let testCases13 = [
+      new Testcase([[1,1,2,2,5,5,5], {}], 5),
+      new Testcase([[10,1,10,2,10,2,10], {}], 10),
+      new Testcase([[-5,6,2,8,3,9,2], {}], 2),
+      new Testcase([[1,1,1,0,1,1,1], {}], 1),
+    ]
+    let p13 = new Problem("Mode of Array", `
+      The mode of an array is defined as the value that occurs most frequently in the array. Create an expression to return the mode of an array "a". There will never be multiple values that are tied for occurring most often. You are provided an empty object "o" for convenience.
+    `, ["a", "o"], testCases13, `a.map(i => [i, o[i] = (o[i] ?? 0) + 1]).sort((a,b) => b[1]-a[1])[0][0]`, [`You may find <a href="#map-knowledge">array.map()</a>, <a href="#sort-knowledge">array.sort()</a>, and <a href="#nullish-coalescing-knowledge">the nullish coalescing operator</a> to be helpful.`, `Given an object o you can increment key k in the following way: <p><code>o[k] = o[k] + 1</code></p>To do so in a way that assumes any key that isn't present has an implied value of 0, you can use the nullish coalescing operator: <p><code>o[k] = (o[k] ?? 0) + 1</code></p>`])
+    let testCases14 = [
+      new Testcase([[5,10,7], [6,4,15]], 7),
+      new Testcase([[2,2], [1,3]], 2),
+      new Testcase([[12, 20, 6], [3, 6, 10]], 19),
+      new Testcase([[3,9,10,11,12], [0,3,10,11,9]], 12),
+    ]
+    let p14 = new Problem("Cookies in Dishes", `
+      You have an assortment of cookies and dishes. Cookie i is at position c[i]. Dish i is at position d[i]. You must return the minimum total distance that you can move cookies to have exactly one cookie in each dish.
+      <button type="button" class="collapsible problem-example"><b>Example:</b> c = [5,10,7], d = [6,4,15]</button>
+      <div class="collapsible-content">
+        <p class="tiny-text">Note that there are other ways to put the cookies into dishes, but this is the solution that minimizes the total distance that cookies are moved.</p>
+        <p>The first cookie is initially at position 5. To put it into a dish, you must move it by 1 space, into the dish at position 4.</p>
+        <p>The second cookie is initially at position 10. To put it into a dish, you must move it by 5 spaces, into the dish at position 15.</p>
+        <p>The third cookie is initially at position 7. To put it into a dish, you must move it by 1 spaces, into the dish at position 6.</p>
+        <p>The first cookie was moved by 1 space, the second cookie was moved by 5 spaces, the third cookie was moved by 1 space. This means the total distance that the cookies moved is 7. It can be shown this is the minimum distance for this test case, therefore the answer is 7.</p>
+      </div>
+    `, ["c", "d"], testCases14, `d.sort((a,b) => a - b).map((a,i) => Math.abs(a - c.sort((a,b) => a - b)[i])).reduce((a,b) => a+b)`, [`You may find the following functions helpful: <a href="#map-knowledge">array.map()</a>, <a href="#sort-knowledge">array.sort()</a>, <a href="#reduce-knowledge">array.reduce()</a>, <a href="#math-knowledge">Math.abs()</a>.`, `The optimal solution will always involve putting the cookie with the lowest position value in the dish with the lowest position value.`, `If both c and d are sorted, the optimal solution is to put c[i] into d[i] for all i.`])
+    let testCases15 = [
+      new Testcase(["I am tall"], 14),
+      new Testcase(["I am a one line wizard"], 42),
+      new Testcase(["Serendipity"], 66),
+      new Testcase(["Big    gap"], 12),
+    ]
+    let p15 = new Problem("The Definition of a Word", `
+      If you accept the definition of a word is some letters without a gap (i.e. without a space). Create an expression to return the number of substrings that represent a valid word in a string "s".
+      <button type="button" class="collapsible problem-example"><b>Example:</b> "I am tall"</button>
+      <div class="collapsible-content">
+        <p>"I" is a valid word.</p>
+        <p>"am" contains three valid words: "a", "m", and "am".</p>
+        <p>"tall" contains ten valid words: "t", "a", "l", "l", "ta", "al", "ll", "tal", "all", "tall".</p>
+        <p>Therefore there are a total of 1+3+10=14 valid word substrings in this string, and your expression.</p>
+      </div>
+    `, ["s"], testCases15, `s.split(" ").map(i => i.length).filter(i => i > 0).map(i => i*(i+1)/2).reduce((a,b) => a + b, 0)`, [`The following functions may be useful: <a href="#map-knowledge">array.map()</a>, <a href="#filter-knowledge">array.filter()</a>, <a href="#reduce-knowledge">array.reduce()</a>, and <a href="#split-knowledge">string.split()</a>.`, "Given a word of length n, it contains n*(n+2)/2 valid word substrings."])
+    let testCases16 = [
+      new Testcase([[["Cromslor", 32], ["Pinskidan", 28]]], ["Cromslor", "Pinskidan"]),
+      new Testcase([[["Arnold", 21], ["Betty", 25], ["Chris", 22], ["Daniel", 19]]], ["Betty", "Chris", "Arnold", "Daniel"]),
+      new Testcase([[["Blinky", 1101], ["Pinky", 1011], ["Inky", 1110], ["Clyde", 1002]]], ["Inky", "Blinky", "Pinky", "Clyde"]),
+    ]
+    let p16 = new Problem("Oldest First", `
+      Given an array l where each element is of the form ["name", age]. Create an expression that returns a 1d array of names, sorted by age from oldest to youngest. No two names will share the same age.
+    `, ["l"], testCases16, `l.sort((a,b) => b[1] - a[1]).map(i => i[0])`, [`You may find the following functions helpful: <a href="#map-knowledge">array.map()</a> and <a href="#sort-knowledge">array.sort()</a>.`, `When passing a function to sort, the compare function can sort based on a specific property like this: <p><code>arr.sort((a,b) => a.property - b.property)</code></p>`])
+
+    let easyProblems = [p0, p12, p1, p7, p6, p11,]
+    let mediumProblems = [p16, p8, p2, p4, p9,]
+    let hardProblems = [p13, p15, p14, p5, p10,]
+
+    let allProblems = [...easyProblems, ...mediumProblems, ...hardProblems]
+  </script>
+</head>
+<body>
+  <div style="display: flex; align-items: end;">
+    <div>
+      <div style="width: 100px; aspect-ratio: 1/1; background-color: #f4de4a; display: flex; align-items: end; justify-content: end; padding: 10px; margin: 10px;">
+        <h2 style="margin: 0; border: none; text-align: end; line-height: 1.1;">
+          <span style="font-size: 1.6em;">J</span>ust
+          <span style="font-size: 1.6em;">S</span>tupid
+        </h2>
+      </div>
+    </div>
+    <h1 style="font-size: 2em; margin-bottom: 10px;">Oneliners</h1>
+  </div>
+  <p class="tiny-text">A love letter to solving arbitrary problems with succinct-to-a-fault code.</p>
+  
+  <p class="top-text">Welcome to Just-Stupid Oneliners! This is a library of coding problems, with a twist: all your solutions must be one line of code. Semi-colons aren't allowed, meaning your solutions must actually be one logical line, not many lines strung together. Also, you must use JavaScript.</p>
+  <p class="top-text">The problems are designed to ramp-up in difficulty. They start at "anyone with coding knowledge could do this" and progress to "only a true wizard of JavaScript sorcery shall succeed".</p>
+  <p class="top-text">The <a href="#knowledge">Compendium of Helpful Knowledge</a> contains most of the fundamental concepts required to solve all the problems, but the combination of concepts can often lead to unintuitive behaviour and perplexing solutions. Prior JavaScript experience recommended.</p>
+
+  <button style="font-size: 0.8em; padding: 15px;" type="button" class="collapsible" id="arrow-function-implicit-return-knowledge">A note on the spirit of the game</button>
+  <div style="font-size: 0.8em;" class="collapsible-content">
+    <p>Given that this entire site is being run in your browser, it would be trivial to cheat in any number of ways to pass each problem.</p>
+    <p>It is also possible to utilize techniques that are against the spirit of the challenge to varying degrees. This is a far more subjective issue, and is up to you to decide where you draw the line.</p>
+    <p>Personally, I have avoided requiring any of the following techniques in these problems on the basis that they (to me) feel against the spirit of the game:</p>
+    <ul>
+      <li>Using default parameters in arrow functions to define new variables.</li>
+      <li>Chaining expressions with commas.</li>
+    </ul>
+  </div>
+
+  <h3>Problem:</h3>
+  <!-- <p style="margin-top: -15px;" class="tiny-text">*Don't forget to open the developer console for debugging</p> -->
+  <p id="problem-description"></p>
+
+  <div id="code-input-area" >
+    <div id="code-syntax-highlighted-container">
+      <p id="code-syntax-highlighted"></p>
+    </div>
+    <textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" type="text" id="code-input" placeholder="One line of JavaScript here" onscroll="syncScroll(this);" oninput="updateCodeValue(this.value)" onfocusout="updateCodeValue(this.value, true)"></textarea>
+  </div>
+  <p id="error-message"></p>
+
+  <button onclick="runCode()">Run Code</button>
+  
+  <div id="testcase-container" style="margin-top: 10px;"></div>
+
+  <h2>Hints:</h2>
+  <div id="hint-container"></div>
+  
+  <div>
+    <h2 class="section-header">Easy Problems</h2>
+    <div class="problem-container" id="easy-problems"></div>
+    <h2 class="section-header">Intermediate Problems</h2>
+    <div class="problem-container" id="medium-problems"></div>
+    <h2 class="section-header">Hard Problems</h2>
+    <div class="problem-container" id="hard-problems"></div>
+  </div>
+
+  <div id="knowledge">
+    <h1 class="section-header">Compendium of Helpful Knowledge</h1>
+
+    <p>This is a collection of techniques, operators, and functions that may prove useful when solving the above problems. It can be read through sequentially, but is more designed to serve as a reference. Many hints will link to specific items from here.</p>
+
+    <h2>General Tips</h2>
+
+    <button type="button" class="collapsible" id="initialize-array-knowledge">Debugging Your Code</button>
+    <div class="collapsible-content">
+      <p>The restrictions of this format can make it difficult to determine what's going on in your code. This is part of the fun! To debug you can add console.log() statements within your code, run it, then open the developer console in the browser window to see the output.</p>
+      <p>With more complex problems this may not be sufficient, in these cases writing your code in a multi-line environment may help you gain an understanding. There are a variety of online JavaScript playgrounds that would suffice for this purpose, searching "javascript online" in your search engine of choice should yield helpful results. If you don't want to do this, you could always create a local .html file, then open it in browser, and anything inside a script tag would run.</p>
+    </div>
+
+    <button type="button" class="collapsible" id="array-operator-functions-knowledge">Array Operator Functions</button>
+    <div class="collapsible-content">
+      <p>When using some functions that operate on an array (such as <a href="#for-each-knowledge">Array.forEach()</a> or <a href="#map-knowledge">Array.map()</a>), you can pass in an anonymous function (commonly expressed as an arrow function in JavaScript). This function can take 1, 2, or 3 parameters. The first parameter is always an element of the list. The optional second parameter is the index of that element.</p>
+      <p>Note that some functions such as <a href="#reduce-knowledge">Array.reduce()</a> and <a href="#sort-knowledge">Array.sort()</a> do not follow this structure.</p>
+      <p>Example: Console log each element in an array. Note that brackets around the parameter list are optional.</p>
+      <p><code>arr.forEach(i => console.log(i))</code></p>
+      <p>Example: Console log each element in an array with its index.</p>
+      <p><code>arr.forEach((i, j) => console.log("Index:" + j + ", Element:" + i))</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="arrow-function-implicit-return-knowledge">Arrow Function Implicit Return</button>
+    <div class="collapsible-content">
+      <p>When writing an arrow function, if you omit curly brackets around your code, it implicitly returns a value.</p>
+      <p>Example: the following function would return n squared when called.</p>
+      <p><code>let squareFn = (n) => n * n</code></p>
+      <p>This is equivalent to:</p>
+      <p><code>let squareFn = (n) => {return n * n}</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="ternary-knowledge">Ternary Operator (?)</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_operator">ternary operator</a> allows selection between one of two values based on whether an expression is true or false.</p>
+      <p>Example: force a number n to be greater than 0:</p>
+      <p><code>n = n < 0 ? 0 : n</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="assignment-self-return-knowledge">Assignments Return the Assigned Value</button>
+    <div class="collapsible-content">
+      <p>This sounds confusing but is in fact quite simple. It just means that an assignment (e.g. x = 5) returns the value being assigned (5 in this case).</p>
+      <p>Example: this would log "hello":</p>
+      <p><code>console.log(greet = "hello")</code></p>
+      <p>Example: Set i and j to 5:</p>
+      <p><code>i = (j = 5)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="function-chaining-knowledge">Function Chaining</button>
+    <div class="collapsible-content">
+      <p>Many array methods return arrays themselves, which allows them to be chained together in a single line.</p>
+      <p>Example: double all elements, remove numbers less than 5, and sum them:</p>
+      <p><code>arr.map(i => i * 2).filter(i => i > 5).reduce((a, b) => a + b)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="spread-operator-knowledge">Spread Operator (...)</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax">spread operator</a> allows an array to be expanded into its constituent elements. This is helpful for passing an array as parameters to a function, or for array concatenation.</p>
+      <p>Example: get the maximum value of an array:</p>
+      <p><code>Math.max(...arr)</code></p>
+      <p>Example: concatenate two arrays:</p>
+      <p><code>combinedArr = [...arr1, ...arr2]</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="nullish-coalescing-knowledge">Nullish Coalescing Operator (??)</button>
+    <div class="collapsible-content">
+      <p>The <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing">nullish coalescing operator</a> returns the expression on the left side if that expression isn't null/undefined, and returns the expression on the right otherwise. This can be helpful when indexing arrays in a way that may result in an out-of-bounds index.</p>
+      <p>Example: Set each element in an array equal to the sum of that element, and the element to the left:</p>
+      <p><code>arr = arr.map((i,j) => i + (arr[j-1] ?? 0))</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="initialize-array-knowledge">Initialize Array</button>
+    <div class="collapsible-content">
+      <p>An array of length N can be initialized using the array constructor. Note that initially each item will be empty, it can be uniformly filled with a value using .fill(). Note that functions such as <a href="#for-each-knowledge">Array.forEach()</a> and <a href="#map-knowledge">Array.map()</a> <b>do not run on empty items</b>.</p>
+      <p>Example: Create an array of length 5 filled with zeros:</p>
+      <p><code>Array(5).fill(0)</code></p>
+    </div>
+
+    <h2>Helpful Functions</h2>
+
+    <h3>Arrays</h3>
+
+    <button type="button" class="collapsible" id="map-knowledge">array.map()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map">array.map()</a> function returns a new array, with each element transformed by a given function.</p>
+      <p>Example: increment every element of an array by 5:</p>
+      <p><code>arr.map(i => i + 5)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="for-each-knowledge">array.forEach()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach">array.forEach()</a> function executes a provided function once for each array element. Note that it <b>does not</b> return the list in the same way <a href="#map-knowledge">array.map()</a> does.</p>
+      <p>Example: log every element of an array:</p>
+      <p><code>arr.forEach(i => console.log(i))</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="filter-knowledge">array.filter()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">array.filter()</a> function returns an array containing only the elements that pass a test function.</p>
+      <p>Example: remove every element less than 5 from an array:</p>
+      <p><code>arr.filter(i => i > 5)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="sort-knowledge">array.sort()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort">array.sort()</a> function sorts the elements of an array in place and returns the sorted array. It sorts according to a comparison function that takes two values and returns a positive or negative number to indicate order.</p>
+      <p>Example: sort numbers in ascending order:</p>
+      <p><code>arr.sort((a, b) => a - b)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="reduce-knowledge">array.reduce()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce">array.reduce()</a> function applies a reducer function to each element of the array, resulting in a single output value.</p>
+      <p>Example: sum all elements of an array:</p>
+      <p><code>arr.reduce((a, b) => a + b)</code></p>
+      <p>This will give an error if called on an empty array, unless an initial value is provided.</p>
+      <p>Example: sum all elements of an empty array:</p>
+      <p><code>[].reduce((a, b) => a + b, 0)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="reverse-knowledge">array.reverse()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse">array.reverse()</a> function reverses the order of elements in an array in place and returns the reversed array.</p>
+      <p>Example: reverse the order of an array:</p>
+      <p><code>arr.reverse()</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="some-every-knowledge">array.some() & array.every()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some">array.some()</a> function returns true if <em>any</em> element passes the test function.  
+        The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every">array.every()</a> function returns true if <em>all</em> elements pass.</p>
+      <p>Example: check if all elements are positive:</p>
+      <p><code>arr.every(i => i > 0)</code></p>
+      <p>Example: check if any element is greater than 100:</p>
+      <p><code>arr.some(i => i > 100)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="slice-knowledge">array.slice() (& string.slice())</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice">array.slice()</a> function returns a copy of a portion of an array. Also works on a string.</p>
+      <p>Example: get the first three elements of an array:</p>
+      <p><code>arr.slice(0, 3)</code></p>
+      <p>Example: shallow copy an entire array:</p>
+      <p><code>arr.slice()</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="join-knowledge">array.join()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join">array.join()</a> function returns a list as a string, with elements separated by the provided argument. The array.join() function is the opposite operation of <a href="split-knowledge">string.split()</a>.</p>
+      <p>Example: transform a list of words "w" into a sentence (words separated by a space).</p>
+      <p><code>w.join(" ")</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="array-includes-knowledge">array.includes()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes">array.includes()</a> function returns true if an array contains a specified element, and false otherwise.</p>
+      <p>Example: check if an array "n" contains the number 3:</p>
+      <p><code>n.includes(3)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="find-knowledge">array.find()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find">array.find()</a> function returns the first element in an array that returns true when passed to a test function.</p>
+      <p>Example: get the value of the first positive element in an array "n":</p>
+      <p><code>n.find(i => i > 0)</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="findIndex-knowledge">array.findIndex()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex">array.findIndex()</a> function returns the <b>index</b> of the first element in an array that returns true when passed to a test function.</p>
+      <p>Example: get the index of the first positive element in an array "n":</p>
+      <p><code>n.findIndex(i => i > 0)</code></p>
+    </div>
+
+    <h3>Strings</h3>
+
+    <button type="button" class="collapsible" id="string-includes-knowledge">string.includes()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes">string.includes()</a> function returns true if a string contains a specified substring, and false otherwise.</p>
+      <p>Example: check if a string s contains the word "blue":</p>
+      <p><code>s.includes("blue")</code></p>
+    </div>
+
+    <button type="button" class="collapsible" id="split-knowledge">string.split()</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/split">string.split()</a> function splits a string into an array of substrings, using a specified separator. The string.split() function is the opposite operation of <a href="#join-knowledge">array.join()</a>.</p>
+      <p>Example: split a string "s" into words:</p>
+      <p><code>s.split(" ")</code></p>
+    </div>
+
+
+    <h3>Misc</h3>
+
+    <button type="button" class="collapsible" id="math-knowledge">Math Functions</button>
+    <div class="collapsible-content">
+      <p>The <a target="blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math">JavaScript Math namespace</a> includes helpful definitions for a variety of mathematical functions. Some examples you may find useful are the absolute value function (Math.abs()), the minimum function (Math.min()), and the maximum function (Math.max()).</p>
+      <p>Example: compute the absolute value of n:</p>
+      <p><code>Math.abs(n)</code></p>
+      <p>Example: compute the max of an array a:</p>
+      <p><code>Math.max(...a)</code></p>
+    </div>
+  </div>
+
+  <div id="footer" style="margin-top: 40px; border-top: 2px solid #ccc;">
+    <p class="tiny-text">Version 1.0.0</p>
+    <p class="tiny-text" style="text-align: center;">The full code for this JS Oneliners is contained in a single HTML file, with no external dependencies (except links). Feel free to save the file (ctrl + s) for local use.</p>
+    <p style="font-size: 0.7em;" class="tiny-text">Created by Nathan Harrison</p>
+  </div>
+</body>
+
+<style>
+body {
+  font-family: "Fira Code", "Consolas", monospace;
+  background-color: #f3f3f3;
+  color: #1d1d1d;
+  margin: 40px auto;
+  max-width: 900px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: #222;
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 0.2em;
+}
+
+h3 {
+  margin-top: 1.5em;
+  font-weight: 600;
+}
+
+.top-text {
+  font-size: 0.9em;
+}
+
+#problem-description {
+  background: #f4f4fc;
+  border-left: 4px solid #0676c1;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+#code-input-area {
+  position: relative;
+  width: 100%;
+  height: 60px;
+}
+
+#code-syntax-highlighted-container {
+  width: calc(100% - 40px);
+  padding: 0 20px 0 16px;
+  padding-top: 10px;
+  top: 0;
+  position: absolute;
+  border-radius: 5px;
+  background-color: #222;
+  border-left: 4px solid #0676c1;
+  border-radius: 5px;
+  padding-bottom: 10px;
+}
+
+#code-syntax-highlighted {
+  color: #fff;
+  white-space: pre-wrap;
+  margin: 0;
+  padding: 0;
+}
+
+#code-input {
+  resize: none;
+  border: none;
+  color: transparent;
+  background: transparent;
+  caret-color: white;
+  width: 100%;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  padding: 0 20px;
+  margin: 0;
+  top: 10px;
+  left: 0;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+#code-syntax-highlighted, #code-input {
+  min-height: 21px;
+  max-height: 70px;
+  line-height: 1.3;
+  font-size: 16px;
+  font-family: "Fira Code", "Consolas", monospace;
+  font-weight: 500;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#code-syntax-highlighted ::-webkit-scrollbar , #code-input ::-webkit-scrollbar {
+    display: none;
+}
+
+code {
+  border-radius: 3px;
+  background-color: #222;
+  color: white;
+  padding: 10px 18px;
+  margin-top: 3px;
+  border-left: 4px solid #0676c1;
+}
+
+#code-input:focus {
+  border-color: #0676c1;
+  outline: none;
+}
+
+#error-message {
+  color: red;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+button {
+  background: #0676c1;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #005fa3;
+  transform: translateY(-2px);
+}
+
+button:active {
+  background: #014474;
+}
+
+.problem-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.problem {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 160px;
+  height: 60px;
+  background-color: #fff;
+  padding: 10px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.problem:hover {
+  border-color: #0676c1;
+  background-color: #eef8ff;
+  transform: translateY(-2px);
+}
+
+.problem p {
+  margin: 0;
+}
+
+.problem p:last-child {
+  font-size: 0.9em;
+}
+
+#testcase-container {
+  margin-top: 20px;
+}
+
+#testcase-container table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+#testcase-container th,
+#testcase-container td {
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+#testcase-container th {
+  background: #0676c1;
+  color: white;
+}
+
+#testcase-container p {
+  font-weight: bold;
+  text-align: center;
+}
+
+.section-header {
+  margin-top: 40px;
+  border-top: 2px solid #ccc;
+  padding-top: 20px;
+}
+
+a {
+  color: #0676c1;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.tiny-text {
+  font-size: 0.8em;
+  margin: 3px 0;
+  color: #2d2d2d;
+}
+
+#knowledge h3 {
+  border-top: 1px solid #ccc;
+  margin-top: 30px;
+  padding-top: 15px;
+}
+
+#knowledge h2 {
+  margin-top: 20px;
+  font-weight: 800;
+  margin-bottom: 0px;
+}
+
+
+@media (max-width: 700px) {
+  body {
+    margin: 20px;
+  }
+
+  #code-input {
+    width: 100%;
+  }
+
+  .problem {
+    width: 100%;
+  }
+}
+
+/* Collapsible Sections */
+/* adapted from https://www.w3schools.com/howto/howto_js_collapsible.asp */
+.collapsible {
+  background-color: #e8e8e8;
+  color: #000;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  border-radius: 10px;
+  font-family: "Fira Code", "Consolas", monospace;
+  transform: none !important;
+}
+
+.active, .collapsible:hover {
+  background-color: #dddfe0;
+}
+
+.active {
+  border-radius: 10px 10px 0 0;
+}
+
+.collapsible-content {
+  padding: 0px 18px;
+  background-color: white;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  border-radius: 0 0 10px 10px;
+}
+</style>
+</html>
